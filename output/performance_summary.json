@@ -1,0 +1,9 @@
+{
+  "courses_scheduled": 3,
+  "conflict_edges": 1,
+  "student_clashes_after_scheduling": 0,
+  "invigilator_assignments": 6,
+  "sessions_with_staffing_warnings": 0,
+  "timetable_solver_runtime_seconds": 0.0007,
+  "status": "SUCCESS"
+}

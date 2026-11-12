@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174b40">
+  <title>Examination Scheduling | University of Mkar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+            <a class="identity" href="{{ url_for('dashboard') }}" aria-label="University of Mkar examinations home">
+  <img src="{{ url_for('static', filename='logo.png') }}" class="identity-mark" alt="University of Mkar logo">
+  <span class="identity-copy">
+    <strong>University of Mkar</strong>
+    <small>Examination Scheduling</small>
+  </span>
+</a>
+      <div class="masthead-actions">
+        <span class="account-label">{{ current_user.full_name }} <small>{{ current_user.department }}</small></span>
+        {% if current_user.is_admin %}<a class="template-link" href="{{ url_for('examiner_approvals') }}">Examiner approvals</a>{% endif %}
+        <a class="template-link" href="{{ url_for('records_home') }}">Manage records</a>
+        <form class="logout-form" action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">Sign out</button></form>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">Academic operations <span></span> Timetable management</p>
+        <h1>Examination schedule</h1>
+      </div>
+      <p class="solver-state {{ 'ready' if solver_ready else 'missing' }}">
+        <span class="state-dot"></span>
+        {{ 'CP-SAT optimizer ready' if solver_ready else 'CP-SAT requires a supported Python version' }}
+      </p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="notices" aria-live="polite">
+          {% for category, message in messages %}
+            <p class="notice {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="metrics" aria-label="Current data summary">
+      <div class="metric"><span>Students</span><strong>{{ stats.students }}</strong></div>
+      <div class="metric"><span>Courses</span><strong>{{ stats.courses }}</strong></div>
+      <div class="metric"><span>Venues</span><strong>{{ stats.venues }}</strong></div>
+      <div class="metric"><span>Invigilators</span><strong>{{ stats.invigilators }}</strong></div>
+      <div class="metric metric-accent"><span>Scheduled exams</span><strong>{{ stats.scheduled }}<small> / {{ stats.courses }}</small></strong></div>
+      <div class="metric"><span>Assigned duties</span><strong>{{ stats.duties }}</strong></div>
+    </section>
+
+    {% if latest_run %}
+      <section class="run-summary" aria-label="Latest optimization run">
+        <span class="run-status"><i></i>{{ latest_run.solver_status }} solution</span>
+        <span>{{ latest_run.courses_scheduled }} courses</span>
+        <span>{{ latest_run.conflict_pairs }} conflict pairs resolved</span>
+        <span>{{ latest_run.slots_used }} slots used</span>
+        <span>{{ latest_run.duties_assigned }} duties</span>
+        <span>{{ '%.2f'|format(latest_run.runtime_seconds) }}s solve time</span>
+      </section>
+    {% endif %}
+
+    <section class="control-grid" aria-label="Data and scheduling controls">
+      <div class="control-section import-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">01 / Data</p><h2>Enter exam data</h2></div>
+          <span class="section-mark" aria-hidden="true">FORM</span>
+        </div>
+        <p class="control-note">Enter and manage students, courses, registrations, time slots, venues, invigilators, and availability in the app. Changes are saved to the database.</p>
+        <a class="button button-dark" href="{{ url_for('records_home') }}">Open record manager <span aria-hidden="true">&#8594;</span></a>
+      </div>
+
+      <div class="control-section optimize-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">02 / Solve</p><h2>Build a timetable</h2></div>
+          <span class="section-mark solver-mark" aria-hidden="true">CP-SAT</span>
+        </div>
+        <form action="{{ url_for('optimize') }}" method="post" class="solver-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label>Invigilators per exam<input name="required_per_exam" type="number" min="1" max="10" value="2" required></label>
+          <label>Time limit, seconds<input name="time_limit_seconds" type="number" min="1" max="120" value="20" required></label>
+          <button class="button button-green" type="submit" {% if not solver_ready %}disabled title="Install OR-Tools with a supported Python version"{% endif %}>Optimize schedule <span aria-hidden="true">&#8594;</span></button>
+        </form>
+        <p class="control-note">Constraints include student clashes, exam duration, room capacity, and invigilator availability and workload.</p>
+      </div>
+    </section>
+
+    <section class="schedule-section">
+      <div class="schedule-heading">
+        <div><p class="eyebrow">03 / Published plan</p><h2>Scheduled examinations</h2></div>
+        <div class="schedule-actions">
+          <span class="schedule-count">{{ exams|length }} sessions</span>
+          {% if exams %}<a class="export-link" href="{{ url_for('export_timetable') }}">Export .xlsx <span aria-hidden="true">&#8595;</span></a>{% endif %}
+        </div>
+      </div>
+      {% if exams %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date and time</th><th>Course</th><th>Venue</th><th>Students</th><th>Invigilators</th></tr></thead>
+            <tbody>
+              {% for exam in exams %}
+                <tr>
+                  <td class="date-cell"><strong>{{ exam.slot.date }}</strong><span>{{ exam.slot.start_time }}–{{ exam.slot.end_time }}</span></td>
+                  <td class="course-cell"><strong>{{ exam.course.course_code }}</strong><span>{{ exam.course.course_title }}</span></td>
+                  <td>{{ exam.venue.venue_name }}</td>
+                  <td class="number-cell">{{ exam.student_count }}</td>
+                  <td>
+                    {% if exam.duties %}
+                      <div class="staff-list">{% for duty in exam.duties %}<span>{{ duty.invigilator.name }}</span>{% endfor %}</div>
+                    {% else %}<span class="unassigned">Not assigned</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state"><span class="empty-index">00</span><p>No timetable has been generated for the current records.</p></div>
+      {% endif %}
+    </section>
+    <footer class="page-footer"><span>University of Mkar</span><span>Examinations Office <i></i> Scheduling system</span></footer>
+  </main>
+</body>
+</html>

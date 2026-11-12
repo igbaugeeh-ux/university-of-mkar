@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174b40">
+  <title>{{ 'Examiner registration' if mode == 'register' else 'Examiner login' }} | University of Mkar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="auth-page">
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="{{ url_for('login') }}" aria-label="University of Mkar examiner sign in">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="identity-mark" alt="University of Mkar logo">
+        <span class="identity-copy"><strong>University of Mkar</strong><small>Examinations Office</small></span>
+      </a>
+    </div>
+  </header>
+  <main class="auth-layout">
+    <section class="auth-panel">
+      <p class="eyebrow">Examiner access <span></span> {{ 'Create account' if mode == 'register' else 'Secure sign in' }}</p>
+      <h1>{{ 'Examiner registration' if mode == 'register' else 'Welcome back' }}</h1>
+      <p class="auth-intro">{{ 'Register with your name and department to access examination records.' if mode == 'register' else 'Sign in to manage examination records and timetables.' }}</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="notices" aria-live="polite">{% for category, message in messages %}<p class="notice {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+      {% endwith %}
+
+      {% if mode == 'register' %}
+        <form class="auth-form" method="post" action="{{ url_for('register') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label>Full name<input name="full_name" type="text" maxlength="150" value="{{ values.get('full_name', '') }}" autocomplete="name" required autofocus></label>
+          <label>Department<input name="department" type="text" maxlength="150" value="{{ values.get('department', '') }}" list="department-options" autocomplete="organization-title" required>
+            <datalist id="department-options">{% for department in departments %}<option value="{{ department }}">{% endfor %}</datalist>
+          </label>
+          <label>Institutional email<input name="email" type="email" maxlength="254" value="{{ values.get('email', '') }}" autocomplete="email" required></label>
+          <div class="auth-field-grid">
+            <label>Password<input name="password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required></label>
+            <label>Confirm password<input name="confirm_password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required></label>
+          </div>
+          <p class="auth-hint">Use at least 10 characters.</p>
+          <button class="button button-green auth-submit" type="submit">Create examiner account <span aria-hidden="true">&#8594;</span></button>
+        </form>
+        <p class="auth-switch">Already registered? <a href="{{ url_for('login') }}">Sign in</a></p>
+      {% else %}
+        <form class="auth-form" method="post" action="{{ url_for('login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="next" value="{{ next_url|default('', true) }}">
+          <label>Institutional email<input name="email" type="email" maxlength="254" value="{{ values.get('email', '') }}" autocomplete="username" required autofocus></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="button button-green auth-submit" type="submit">Sign in <span aria-hidden="true">&#8594;</span></button>
+        </form>
+        <p class="auth-switch">New examiner? <a href="{{ url_for('register') }}">Create an account</a></p>
+        <p class="auth-switch"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
+        {% if admin_setup_available %}<p class="auth-switch">Initial setup? <a href="{{ url_for('setup_admin_page') }}">Create the first administrator</a></p>{% endif %}
+      {% endif %}
+    </section>
+    <footer class="auth-footer">University of Mkar <i></i> Examinations Office</footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,4 @@
+invigilator_id,name,department,max_duties,qualified_courses
+I001,Dr John,Computer Science,4,*
+I002,Mrs Mary,Registry,4,*
+I003,Mr Peter,Mathematics,4,*

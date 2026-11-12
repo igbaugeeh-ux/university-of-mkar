@@ -1,0 +1,2 @@
+student_id,course_a,course_b,clash_type
+S001,C001,C002,potential_same-slot conflict

@@ -1,0 +1,4 @@
+course_id,course_code,course_title,slot_id,date,start_time,end_time,venue_id,venue_name,student_count
+C002,CSC302,Database Systems,T1,2026-11-02,09:00,11:00,V2,ICT Hall,2
+C001,CSC301,Algorithms,T2,2026-11-02,11:30,13:30,V2,ICT Hall,2
+C003,MTH201,Calculus,T3,2026-11-03,09:00,11:00,V2,ICT Hall,1

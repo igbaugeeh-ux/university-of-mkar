@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174b40">
+  <title>Initial Administrator Setup | University of Mkar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="auth-page">
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="{{ url_for('login') }}" aria-label="University of Mkar administrator setup">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="identity-mark" alt="University of Mkar logo">
+        <span class="identity-copy"><strong>University of Mkar</strong><small>Examinations Office</small></span>
+      </a>
+    </div>
+  </header>
+  <main class="auth-layout">
+    <section class="auth-panel">
+      <p class="eyebrow">First-run setup <span></span> Administrator</p>
+      <h1>Create administrator</h1>
+      <p class="auth-intro">Create the initial administrator account. This setup page closes after an administrator is created.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="notices" aria-live="polite">{% for category, message in messages %}<p class="notice {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+      {% endwith %}
+      <form class="auth-form" method="post" action="{{ url_for('setup_admin_page') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>Full name<input name="full_name" type="text" maxlength="150" value="{{ values.get('full_name', '') }}" autocomplete="name" required autofocus></label>
+        <label>Institutional email<input name="email" type="email" maxlength="254" value="{{ values.get('email', '') }}" autocomplete="email" required></label>
+        <div class="auth-field-grid">
+          <label>Password<input name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+          <label>Confirm password<input name="confirm_password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+        </div>
+        <p class="auth-hint">Use at least 12 characters. Keep this account secure.</p>
+        <button class="button button-green auth-submit" type="submit">Create administrator <span aria-hidden="true">&#8594;</span></button>
+      </form>
+      <p class="auth-switch"><a href="{{ url_for('login') }}">Back to sign in</a></p>
+    </section>
+    <footer class="auth-footer">University of Mkar <i></i> Examinations Office</footer>
+  </main>
+</body>
+</html>

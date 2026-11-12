@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174b40">
+  <title>Examiner Approvals | University of Mkar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="{{ url_for('dashboard') }}" aria-label="University of Mkar examinations home">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="identity-mark" alt="University of Mkar logo">
+        <span class="identity-copy"><strong>University of Mkar</strong><small>Examinations Office</small></span>
+      </a>
+      <div class="masthead-actions">
+        <span class="account-label">{{ current_user.full_name }} <small>Administrator</small></span>
+        <a class="template-link" href="{{ url_for('dashboard') }}">Timetable dashboard</a>
+        <form class="logout-form" action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">Sign out</button></form>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell records-shell">
+    <section class="page-heading records-heading">
+      <div><p class="eyebrow">Account administration <span></span> Examiners</p><h1>Examiner approvals</h1></div>
+      <span class="pending-count">{{ pending_count }} pending</span>
+    </section>
+    <nav class="record-nav" aria-label="Examiner account status">
+      <a class="{{ 'active' if view == 'pending' else '' }}" href="{{ url_for('examiner_approvals', view='pending') }}">Pending</a>
+      <a class="{{ 'active' if view == 'approved' else '' }}" href="{{ url_for('examiner_approvals', view='approved') }}">Approved</a>
+      <a class="{{ 'active' if view == 'all' else '' }}" href="{{ url_for('examiner_approvals', view='all') }}">All accounts</a>
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="notices" aria-live="polite">{% for category, message in messages %}<p class="notice {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    <section class="records-content approval-content">
+      <div class="schedule-heading"><div><p class="eyebrow">{{ accounts|length }} accounts</p><h2>{{ view|capitalize }} examiners</h2></div></div>
+      {% if accounts %}
+        <div class="table-wrap records-table-wrap">
+          <table class="records-table">
+            <thead><tr><th>Examiner</th><th>Department</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for account in accounts %}
+                <tr>
+                  <td class="examiner-cell"><strong>{{ account.full_name }}</strong><span>{{ account.email }}</span></td>
+                  <td>{{ account.department }}</td>
+                  <td>{{ account.created_at.strftime('%Y-%m-%d') }}</td>
+                  <td><span class="approval-status {{ 'approved' if account.is_approved else 'pending' }}">{{ 'Administrator' if account.is_admin else ('Approved' if account.is_approved else 'Pending') }}</span></td>
+                  <td class="approval-actions">
+                    {% if not account.is_approved and not account.is_admin %}
+                      <form method="post" action="{{ url_for('approve_examiner', account_id=account.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="button button-green compact-button" type="submit">Approve</button>
+                      </form>
+                      <form method="post" action="{{ url_for('reject_examiner', account_id=account.id) }}" onsubmit="return confirm('Reject this examiner application?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="small-action danger-action" type="submit">Reject</button>
+                      </form>
+                    {% else %}<span class="schedule-count">—</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state"><span class="empty-index">00</span><p>No {{ view }} examiner accounts.</p></div>
+      {% endif %}
+    </section>
+    <footer class="page-footer"><span>University of Mkar</span><span>Examiner access <i></i> Administration</span></footer>
+  </main>
+</body>
+</html>

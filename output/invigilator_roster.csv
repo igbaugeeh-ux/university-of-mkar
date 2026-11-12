@@ -1,0 +1,7 @@
+course_id,course_code,slot_id,date,start_time,end_time,venue_name,invigilator_id,invigilator_name,duty_number
+C002,CSC302,T1,2026-11-02,09:00,11:00,ICT Hall,I001,Dr John,1
+C002,CSC302,T1,2026-11-02,09:00,11:00,ICT Hall,I003,Mr Peter,1
+C001,CSC301,T2,2026-11-02,11:30,13:30,ICT Hall,I002,Mrs Mary,1
+C001,CSC301,T2,2026-11-02,11:30,13:30,ICT Hall,I001,Dr John,2
+C003,MTH201,T3,2026-11-03,09:00,11:00,ICT Hall,I003,Mr Peter,2
+C003,MTH201,T3,2026-11-03,09:00,11:00,ICT Hall,I002,Mrs Mary,2

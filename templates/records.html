@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174b40">
+  <title>Record Management | University of Mkar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="{{ url_for('dashboard') }}" aria-label="University of Mkar examinations home">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="identity-mark" alt="University of Mkar logo">
+        <span class="identity-copy"><strong>University of Mkar</strong><small>Examinations Office</small></span>
+      </a>
+      <div class="masthead-actions">
+        <span class="account-label">{{ current_user.full_name }} <small>{{ current_user.department }}</small></span>
+        {% if current_user.is_admin %}<a class="template-link" href="{{ url_for('examiner_approvals') }}">Examiner approvals</a>{% endif %}
+        <a class="template-link" href="{{ url_for('dashboard') }}">Timetable dashboard <span aria-hidden="true">&#8594;</span></a>
+        <form class="logout-form" action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">Sign out</button></form>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell records-shell">
+    <section class="page-heading records-heading">
+      <div>
+        <p class="eyebrow">Academic operations <span></span> Data management</p>
+        <h1>{{ config.label if config else 'Database records' }}</h1>
+      </div>
+      {% if view == 'list' %}
+        <a class="button button-green" href="{{ url_for('new_record', table_name=table_name) }}">Add record <span aria-hidden="true">+</span></a>
+      {% else %}
+        <a class="template-link back-link" href="{{ url_for('list_records', table_name=table_name) }}">Back to {{ config.label|lower }}</a>
+      {% endif %}
+    </section>
+
+    <nav class="record-nav" aria-label="Database tables">
+      {% for key, item in tables.items() %}
+        <a class="{{ 'active' if key == table_name else '' }}" href="{{ url_for('list_records', table_name=key) }}">{{ item.label }}</a>
+      {% endfor %}
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="notices" aria-live="polite">{% for category, message in messages %}<p class="notice {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% endwith %}
+
+    {% if view == 'list' %}
+      <section class="records-content">
+        <div class="schedule-heading">
+          <div><p class="eyebrow">{{ records|length }} records</p><h2>{{ config.label }}</h2></div>
+          <span class="schedule-count">{{ config.description }}</span>
+        </div>
+        {% if records %}
+          <div class="table-wrap records-table-wrap">
+            <table class="records-table">
+              <thead><tr>{% for field in config.fields %}<th>{{ field.label }}</th>{% endfor %}<th>Actions</th></tr></thead>
+              <tbody>
+                {% for record in records %}
+                  <tr>
+                    {% for field in config.fields %}
+                      <td>{% if field.type == 'boolean' %}{{ 'Yes' if record.values[field.name] else 'No' }}{% else %}{{ record.values[field.name] if record.values[field.name] is not none else '—' }}{% endif %}</td>
+                    {% endfor %}
+                    <td class="record-actions">
+                      <a class="small-action" href="{{ url_for('edit_record', table_name=table_name, record_key=record.key) }}">Edit</a>
+                      <form action="{{ url_for('delete_record', table_name=table_name, record_key=record.key) }}" method="post" onsubmit="return confirm('Delete this record?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="small-action danger-action" type="submit">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><span class="empty-index">00</span><p>No {{ config.label|lower }} records yet.</p></div>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="record-form-section">
+        <div class="section-heading"><div><p class="eyebrow">{{ 'New record' if view == 'new' else 'Update record' }}</p><h2>{{ config.label }}</h2></div></div>
+        <form class="record-form" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% for field in config.fields %}
+            <label class="record-field">
+              <span>{{ field.label }}{% if field.required %}<b aria-hidden="true">*</b>{% endif %}</span>
+              {% if field.type == 'boolean' %}
+                <select name="{{ field.name }}" required>
+                  <option value="true" {{ 'selected' if values.get(field.name, true) in [true, 'true', '1', 'yes'] else '' }}>Available</option>
+                  <option value="false" {{ 'selected' if values.get(field.name) in [false, 'false', '0', 'no'] else '' }}>Unavailable</option>
+                </select>
+              {% else %}
+                <input name="{{ field.name }}" type="{{ field.type }}" value="{{ values.get(field.name, '') if values.get(field.name) is not none else '' }}" {% if field.required %}required{% endif %} {% if field.minimum is defined %}min="{{ field.minimum }}"{% endif %} {% if view == 'edit' and field.primary_key %}readonly aria-readonly="true"{% endif %}>
+              {% endif %}
+            </label>
+          {% endfor %}
+          <div class="record-form-actions">
+            <a class="cancel-link" href="{{ url_for('list_records', table_name=table_name) }}">Cancel</a>
+            <button class="button button-green" type="submit">{{ 'Create record' if view == 'new' else 'Save changes' }}</button>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+    <footer class="page-footer"><span>University of Mkar</span><span>Source data <i></i> Database management</span></footer>
+  </main>
+</body>
+</html>
