@@ -58,14 +58,17 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="button button-green compact-button" type="submit">Approve</button>
                       </form>
+                                     
                       <form method="post" action="{{ url_for('reject_examiner', account_id=account.id) }}" onsubmit="return confirm('Reject this examiner application?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="small-action danger-action" type="submit">Reject</button>
-                      </form>
+                          
+                      </form>     {% endif %}
                    
                   </td>
                 </tr>
               {% endfor %}
+              
             </tbody>
           </table>
         </div>
@@ -75,6 +78,6 @@
     </section>
     <footer class="page-footer"><span>University of Mkar</span><span>Examiner access <i></i> Administration</span></footer>
   </main>
-
+ {% include 'footer.html' %}
 </body>
 </html>
